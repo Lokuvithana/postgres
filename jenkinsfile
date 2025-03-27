@@ -1,0 +1,54 @@
+pipeline {
+    agent {
+        Dockerfile true
+    }
+
+    environment{
+        POSTGRES_USER = "postgres"
+        POSTGRES_PASSWORD='postgres'
+        POSTGRES_DB='mydb'
+        POSTGRES_IMAGE = "postgres-image"
+        POSTGRES_CONTAINER='postgres-container'
+    }
+
+    stages {
+        stage('Build Docker File') {
+            steps {
+                script{
+                    sh'echo "Building postgres docker file"'
+                    writeFile file: 'Dockerfile', text: '''
+                        FROM postgres:15
+
+                        ENV POSTGRES_USER=${POSTGRES_USER}
+                        ENV POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+                        ENV POSTGRES_DB=${POSTGRES_DB}
+
+                        EXPOSE 5432
+                        CMD ["postgres"]
+                    '''
+                }
+                
+            }
+        }
+        stage('Build Docker Image'){
+            steps{
+                sh'echo "Building postgres image"'
+                sh 'docker build -t ${POSTGRES_IMAGE} .'
+            }
+        }
+
+        stage('Build Docker Container'){
+            steps{
+                sh'echo "Building Postgres container"'
+                sh'docker run -d --name ${POSTGRES_CONTAINER} -p 5432:5432 -e POSTGRES_USER=${POSTGRES_USER} -e POSTGRES_PASSWORD=${POSTGRES_PASSWORD} -e POSTGRES_DB=${POSTGRES_DB} ${POSTGRES_IMAGE}' 
+            }
+        }
+        stage('Stop container'){
+            steps{
+                sh'docker stop ${POSTGRES_CONTAINER} && docker rm ${POSTGRES_CONTAINER}'
+            }
+        }
+
+        
+    }
+}
