@@ -10,7 +10,7 @@ pipeline {
         POSTGRES_IMAGE = "postgres-image"
         POSTGRES_CONTAINER='postgres-container'
     }
-
+    //add comment
     stages {
         stage('Build Docker File') {
             steps {
